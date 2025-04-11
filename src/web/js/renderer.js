@@ -7,7 +7,7 @@ import { main, display } from "./html.js";
 const musicbrainz = async (endpoint) => {
     return await (
         await fetch(`https://musicbrainz.org/ws/2/${endpoint}`, {
-            headers: { "User-Agent": "iiPython CD Ripper/0.2.0 (ben@iipython.dev)" }
+            headers: { "User-Agent": "iiPython CD Ripper/0.2.1 (ben@iipython.dev)" }
         })
     ).json();
 }
@@ -20,7 +20,6 @@ new (class {
     }
 
     async show_disc() {
-        const [ drive_model, drive_speed ] = this.drive;
         this.disc.artist = this.disc["artist-credit"][0]["name"];
         
         const convert_time = (milliseconds) => {
@@ -60,8 +59,7 @@ new (class {
                     <span>Date: ${this.disc.date}</span>
                     <span>Runtime: ${convert_time(this.disc.media[0].tracks.map(track => track.length).reduce((x, y) => x + y))}</span>
                     <span>Country: ${this.disc["release-events"][0].area["iso-3166-1-codes"][0]}</span>
-                    <span>Drive: ${drive_model}</span>
-                    <span>Speed: ${drive_speed || "N/A"}</span>
+                    <span>Drive: ${this.drive}</span>
                     <hr>
                     <a href = "https://musicbrainz.org/release/${this.disc.id}" target = "_blank">MusicBrainz</a>
                     <a href = "https://last.fm/music/${this.disc.artist}/${this.disc.title}" target = "_blank">Last.fm</a>
@@ -87,12 +85,23 @@ new (class {
         }
 
         // Ripping phase
-        document.querySelector("#rip").addEventListener("click", () => { this.rip_disc(); });
+        document.querySelector("#rip").addEventListener("click", async (e) => {
+            if (e.currentTarget.innerText === "Eject disc") {
+                await ripper_api.eject_disc();
+                this.check_interval = setInterval(() => this.check_drive(), 1000);
+                this.check_drive();
+                return;
+            }
+            this.rip_disc();
+        });
     }
 
     async on_update(update) {
         const track_count = this.disc.media[0].tracks.length;
-        if (update === "done") return new Notification("Rip complete", { body: `All ${track_count} tracks ripped.` })
+        if (update === "done") {
+            document.querySelector("button").innerText = "Eject disc";
+            return new Notification("Rip complete", { body: `All ${track_count} tracks ripped.` });
+        }
         document.querySelector("#progress").style.width = `${(update / (track_count * 2)) * 100}%`;
         if (update <= track_count) document.querySelector(`td[data-track-number = "${+update}"]`).innerText = "✓";
     }
@@ -142,7 +151,6 @@ new (class {
         
         this.toc = toc;
         this.disc = await this.fetch_metadata(toc);
-        console.log(this.disc);
 
         if (!this.disc) return display("no_match");
         await this.show_disc();

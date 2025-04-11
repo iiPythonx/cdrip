@@ -40,18 +40,10 @@ class DiscHandler {
             exec("udevadm info --query=all --name=/dev/sr0 --no-pager", (error, stdout, stderr) => resolve([stdout, stderr]));
         }));
         if (stderr.split("\n")[0].match(/nknown device/)) return null;
-
-        const speed_match = (await new Promise((resolve) => {
-            exec("cd-drive", (error, stdout) => resolve(stdout));
-        })).match(/Maximum read speed.+\((\d{1,2}x)\)/);
-
         return [
-            [
-                stdout.match(/ID_VENDOR=(.+)/)[1],
-                stdout.match(/ID_MODEL=(.+)/)[1]
-            ].join(" "),
-            speed_match
-        ]
+            stdout.match(/ID_VENDOR=(.+)/)[1],
+            stdout.match(/ID_MODEL=(.+)/)[1]
+        ].join(" ")
     }
 
     async rip_disc(path) {
@@ -71,9 +63,19 @@ class DiscHandler {
 
     async convert_flac(path, filenames, mbid) {
         for (const file of readdirSync(path)) {
+
+            // If there's an existing FLAC file, delete it and move on
+            if (file.match(/.*\.flac/)) {
+                unlinkSync(join(path, file));
+                continue;
+            }
+
+            // Calculate track index and new filename
             const index = +file.match(/track(\d+)\.cdda\.wav/)[1];
             const [ new_name, title ] = filenames[index - 1];
-            execSync(`ffmpeg -i "${join(path, file)}" -metadata title="${title}" -metadata musicbrainz_albumid="${mbid}" "${join(path, new_name)}"`, () => {});
+
+            // Convert to FLAC and add metadata
+            execSync(`ffmpeg -i "${join(path, file)}" -metadata title="${title}" -metadata musicbrainz_albumid="${mbid}" "${join(path, new_name)}"`);
             unlinkSync(join(path, file));  // Remove old WAV file
             this.webcontents.send("rip:update", index + filenames.length);
         }

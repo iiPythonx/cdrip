@@ -7,6 +7,7 @@ const { contextBridge, ipcRenderer } = require("electron/renderer");
 contextBridge.exposeInMainWorld("ripper_api", {
     choose_folder: () => ipcRenderer.invoke("util:choose_folder"),
     open_picard: (path) => ipcRenderer.invoke("util:open_picard", path),
+    eject_disc: () => ipcRenderer.invoke("util:eject_disc"),
     fetch_toc: () => ipcRenderer.invoke("rip:fetch_toc"),
     fetch_drive: () => ipcRenderer.invoke("rip:fetch_drive"),
     rip_disc: (path) => ipcRenderer.invoke("rip:rip_disc", path),

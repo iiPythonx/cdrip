@@ -2,19 +2,20 @@
 
 // Modules
 const path = require("path");
-const { app, shell, BrowserWindow, ipcMain, dialog, Notification } = require("electron");
+const { app, shell, BrowserWindow, ipcMain, dialog } = require("electron");
 const { exec } = require("child_process");
 
 const disc = (require("./lib/disc")).default;
 
 const createWindow = () => {
     const mainWindow = new BrowserWindow({
-        width: 800,
+        width: 1000,
         height: 600,
         webPreferences: {
             preload: path.join(__dirname, "lib/preload.js")
         }
     });
+    mainWindow.setMenuBarVisibility(false);
     mainWindow.webContents.setWindowOpenHandler((details) => {
         shell.openExternal(details.url);
         return { action: "deny" };
@@ -30,13 +31,12 @@ app.whenReady().then(() => {
             properties: ["openDirectory", "createDirectory"]
         });
     });
-    
-    notification.show();
     ipcMain.handle("util:open_picard", async (_, path) => {
         return await new Promise((resolve) => exec(`picard "${path}"`, (error) => {
             resolve(error === null);
         }))
     });
+    ipcMain.handle("util:eject_disc", () => { exec("eject"); });
 
     createWindow();
     app.on("activate", () => {

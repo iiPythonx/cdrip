@@ -1,0 +1,125 @@
+/* Page setup */
+* {
+    margin: 0px;
+    color: #fff;
+    font-family: system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial, "Helvetica Neue", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+body, html {
+    height: 100%;
+}
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #121212;
+}
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 800px;
+}
+
+/* Main layout */
+header, footer > section, #error {
+    background-color: #242424;
+    border-radius: 5px;
+    padding: 15px;
+    border: 1px solid #424242;
+}
+header, footer {
+    gap: 20px;
+    display: flex;
+}
+footer {
+    gap: 10px;
+}
+main > div {
+    display: flex;
+    justify-content: space-between;
+}
+section {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Error prompts */
+section#error {
+    width: 500px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
+/* Title, artist, cover */
+h1 {
+    font-size: 48px;
+}
+h2 {
+    font-weight: normal;
+}
+section#title {
+    justify-content: center;
+}
+img {
+    height: 120px;
+    border-radius: 5px;
+}
+
+/* Metadata */
+section#metadata {
+    gap: 5px;
+}
+hr {
+    margin: 10px 0px 10px 0px;
+}
+label {
+    margin-left: 5px;
+}
+
+/* Rip button and progress */
+button {
+    border: none;
+    border-radius: 5px;
+    background-color: #05A2A2;
+    font-weight: bold;
+    padding: 5px;
+    cursor: pointer;
+    transition: background-color .25s ease;
+}
+button:hover {
+    background-color: #037777;
+}
+div#progress {
+    background-color: green;
+    border-radius: 5px;
+    width: 0%;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    height: 5px;
+    transition: width 1s ease;
+}
+
+/* Tracklist */
+section#tracks {
+    flex: 1;
+    gap: 10px;
+    position: relative;
+}
+section#tracks > .track-container {
+    flex: 1;
+    max-height: 200px;
+    overflow-y: scroll;
+    scrollbar-width: thin;
+}
+table {
+    width: 100%;
+}
+th {
+    text-align: left;
+}
+td {
+    height: 23px;
+}

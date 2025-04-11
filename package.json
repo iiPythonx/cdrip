@@ -1,0 +1,13 @@
+{
+  "name": "cdripper",
+  "main": "src/main.js",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "electron": "^35.1.5"
+  },
+  "scripts": {
+    "start": "electron ."
+  }
+}

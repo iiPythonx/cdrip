@@ -4,7 +4,7 @@
 const { contextBridge, ipcRenderer } = require("electron/renderer");
 
 // Expose API
-contextBridge.exposeInMainWorld("ripper_api", {
+contextBridge.exposeInMainWorld("ripapi", {
     choose_folder: () => ipcRenderer.invoke("util:choose_folder"),
     open_picard: (path) => ipcRenderer.invoke("util:open_picard", path),
     eject_disc: () => ipcRenderer.invoke("util:eject_disc"),

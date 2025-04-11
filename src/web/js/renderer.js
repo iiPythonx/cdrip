@@ -87,7 +87,7 @@ new (class {
         // Ripping phase
         document.querySelector("#rip").addEventListener("click", async (e) => {
             if (e.currentTarget.innerText === "Eject disc") {
-                await ripper_api.eject_disc();
+                await ripapi.eject_disc();
                 this.check_interval = setInterval(() => this.check_drive(), 1000);
                 this.check_drive();
                 return;
@@ -107,15 +107,15 @@ new (class {
     }
 
     async rip_disc() {
-        const path = await ripper_api.choose_folder();
+        const path = await ripapi.choose_folder();
         if (!path) return;
 
         // Calculate album path
-        ripper_api.rip_update((update) => this.on_update(update));
+        ripapi.rip_update((update) => this.on_update(update));
 
         const folder_path = `${path[0]}/${this.disc.artist} - ${this.disc.title}/`;
-        await ripper_api.rip_disc(folder_path);  // do NOT remove end slash
-        await ripper_api.convert_flac(
+        await ripapi.rip_disc(folder_path);  // do NOT remove end slash
+        await ripapi.convert_flac(
             folder_path,
             this.disc.media[0].tracks.map(track => [
                 `${track.number.padStart(2, "0")} ${track.title.replace("/", "_")}.flac`,
@@ -124,7 +124,7 @@ new (class {
             this.disc.id
         );
         if (document.querySelector("#open-in-picard").checked) {
-            if (!await ripper_api.open_picard(folder_path))
+            if (!await ripapi.open_picard(folder_path))
                 return new Notification("Can't open picard", { body: "Click here to download it" }).addEventListener("click", () => {
                     const a = document.createElement("a");
                     a.href = "https://picard.musicbrainz.org";
@@ -141,10 +141,10 @@ new (class {
     }
 
     async check_drive() {
-        this.drive = await ripper_api.fetch_drive();
+        this.drive = await ripapi.fetch_drive();
         if (!this.drive) return display("no_drive");
         
-        const toc = await ripper_api.fetch_toc();
+        const toc = await ripapi.fetch_toc();
         if (!toc) return display("no_disc");
         
         clearInterval(this.check_interval);

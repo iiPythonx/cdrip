@@ -82,6 +82,7 @@ new (class {
                                 <th>#</th>
                                 <th>Title</th>
                                 <th>Length</th>
+                                <th></th>
                             </tr>
                         </table>
                     </div>

@@ -42,6 +42,14 @@ section {
     display: flex;
     flex-direction: column;
 }
+a {
+    width: fit-content;
+    transition: color .25s ease;
+}
+a:hover {
+    color: gray;
+    text-decoration: underline;
+}
 
 /* Error prompts */
 section#error {
@@ -127,6 +135,9 @@ th {
 td {
     height: 23px;
 }
+td:last-child {
+    width: 24px;
+}
 
 /* Dialog */
 dialog {
@@ -171,9 +182,4 @@ footer#credit, footer#credit * {
 }
 footer#credit a {
     text-decoration: underline dotted;
-    transition: color .25s ease;
-}
-footer#credit a:hover {
-    color: gray;
-    text-decoration: underline;
 }

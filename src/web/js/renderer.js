@@ -7,7 +7,7 @@ import { main, display } from "./html.js";
 const musicbrainz = async (endpoint) => {
     return await (
         await fetch(`https://musicbrainz.org/ws/2/${endpoint}`, {
-            headers: { "User-Agent": "iiPython CD Ripper/0.2.1 (ben@iipython.dev)" }
+            headers: { "User-Agent": "iiPython CD Ripper/0.3.0 (ben@iipython.dev)" }
         })
     ).json();
 }
@@ -15,8 +15,41 @@ const musicbrainz = async (endpoint) => {
 // Main class
 new (class {
     constructor() {
-        this.check_interval = setInterval(() => this.check_drive(), 1000);
-        this.check_drive();
+        this.websocket = new WebSocket("ws://localhost:8000/ws");
+        this.websocket.addEventListener("open", () => {
+            this.websocket.addEventListener("message", (e) => {
+                const data = JSON.parse(e.data);
+                console.log(data);
+                switch (data.type) {
+                    case "update":
+                        this.on_update(data.progress);
+                        break;
+
+                    case "flac-complete":
+                        this.on_update("done");
+                        this.resolve();
+                        break;
+
+                    default:
+                        if (this.resolve) {
+                            this.resolve(data.value);
+                            delete this.resolve;
+                        }
+                        break;
+                }
+            });
+
+            this.check_interval = setInterval(() => this.check_drive(), 1000);
+            this.check_drive();
+        });
+
+    }
+
+    send(type, ...args) {
+        return new Promise((resolve) => {
+            this.resolve = resolve;
+            this.websocket.send(JSON.stringify({ type, args }));
+        });
     }
 
     async show_disc() {
@@ -87,7 +120,7 @@ new (class {
         // Ripping phase
         document.querySelector("#rip").addEventListener("click", async (e) => {
             if (e.currentTarget.innerText === "Eject disc") {
-                await ripapi.eject_disc();
+                this.send("eject_disc");
                 this.check_interval = setInterval(() => this.check_drive(), 1000);
                 this.check_drive();
                 return;
@@ -100,22 +133,36 @@ new (class {
         const track_count = this.disc.media[0].tracks.length;
         if (update === "done") {
             document.querySelector("button").innerText = "Eject disc";
-            return new Notification("Rip complete", { body: `All ${track_count} tracks ripped.` });
+            return;
         }
         document.querySelector("#progress").style.width = `${(update / (track_count * 2)) * 100}%`;
         if (update <= track_count) document.querySelector(`td[data-track-number = "${+update}"]`).innerText = "✓";
     }
 
     async rip_disc() {
-        const path = await ripapi.choose_folder();
-        if (!path) return;
+        const path = await new Promise(async (resolve) => {
+            const dialog = document.createElement("dialog");
+            dialog.open = true;
+            dialog.innerHTML = `
+                <div>
+                    <h2>Select storage path</h2>
+                    <input value = "${await this.send("fetch_music_path")}" id = "path" autofocus>
+                    <button id = "path-confirm">Rip!</button>
+                </div>
+            `;
+            document.body.appendChild(dialog);
+            document.querySelector("#path-confirm").addEventListener("click", () => {
+                resolve(document.querySelector("#path").value);
+                dialog.remove();
+            })
+        });
 
         // Calculate album path
-        ripapi.rip_update((update) => this.on_update(update));
+        const folder_path = `${path}/${this.disc.artist} - ${this.disc.title}/`;
 
-        const folder_path = `${path[0]}/${this.disc.artist} - ${this.disc.title}/`;
-        await ripapi.rip_disc(folder_path);  // do NOT remove end slash
-        await ripapi.convert_flac(
+        await this.send("rip_disc", folder_path);  // do NOT remove end slash
+        await this.send(
+            "convert_flac",
             folder_path,
             this.disc.media[0].tracks.map(track => [
                 `${track.number.padStart(2, "0")} ${track.title.replace("/", "_")}.flac`,
@@ -123,15 +170,7 @@ new (class {
             ]),
             this.disc.id
         );
-        if (document.querySelector("#open-in-picard").checked) {
-            if (!await ripapi.open_picard(folder_path))
-                return new Notification("Can't open picard", { body: "Click here to download it" }).addEventListener("click", () => {
-                    const a = document.createElement("a");
-                    a.href = "https://picard.musicbrainz.org";
-                    a.target = "_blank";
-                    a.click();
-                });
-        }
+        if (document.querySelector("#open-in-picard").checked) this.send("open_picard", folder_path);
     }
 
     async fetch_metadata(toc) {
@@ -141,10 +180,10 @@ new (class {
     }
 
     async check_drive() {
-        this.drive = await ripapi.fetch_drive();
+        this.drive = await this.send("fetch_drive");
         if (!this.drive) return display("no_drive");
         
-        const toc = await ripapi.fetch_toc();
+        const toc = await this.send("fetch_toc");
         if (!toc) return display("no_disc");
         
         clearInterval(this.check_interval);

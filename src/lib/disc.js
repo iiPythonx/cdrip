@@ -1,27 +1,19 @@
 // Copyright (c) 2025 iiPython
 
 // Modules
+import notifier from "node-notifier";
 import { join } from "path";
 import { existsSync, mkdirSync, readdirSync, unlinkSync } from "fs";
-import { exec, execSync, spawn } from "child_process";
-import { ipcMain } from "electron";
+import { spawn } from "child_process";
 
 // Disc handling
 class DiscHandler {
     constructor() {
-        this.webcontents = null;
-
-        // Setup API handling
-        ipcMain.handle("rip:fetch_toc", () => this.fetch_disc_toc());
-        ipcMain.handle("rip:fetch_drive", () => this.fetch_drive_string());
-        ipcMain.handle("rip:rip_disc", (_, ...args) => this.rip_disc(...args));
-        ipcMain.handle("rip:convert_flac", (_, ...args) => this.convert_flac(...args));
+        this.websocket = null;
     }
 
     async fetch_disc_toc() {
-        let stdout = (await new Promise((resolve) => {
-            exec("cdparanoia -Q", (error, stdout, stderr) => resolve(stderr));
-        })).split("\n");
+        const stdout = Bun.spawnSync(["cdparanoia", "-Q"]).stderr.toString().split("\n");
 
         // Calculate track offsets
         const lines = stdout.filter(line => /^\s+\d/.test(line));
@@ -36,10 +28,9 @@ class DiscHandler {
     }
 
     async fetch_drive_string() {
-        let [ stdout, stderr ] = (await new Promise((resolve) => {
-            exec("udevadm info --query=all --name=/dev/sr0 --no-pager", (error, stdout, stderr) => resolve([stdout, stderr]));
-        }));
-        if (stderr.split("\n")[0].match(/nknown device/)) return null;
+        const process = Bun.spawnSync(["udevadm", "info", "--query=all", "--name=/dev/sr0", "--no-pager"]);
+        if (process.stderr.toString().split("\n")[0].match(/nknown device/)) return null;
+        const stdout = process.stdout.toString();
         return [
             stdout.match(/ID_VENDOR=(.+)/)[1],
             stdout.match(/ID_MODEL=(.+)/)[1]
@@ -55,10 +46,11 @@ class DiscHandler {
             process.stderr.setEncoding("ascii");
             process.stderr.on("data", (data) => {
                 const match = data.match(/outputting.*track(\d+)\.cdda\.wav/);
-                if (match) this.webcontents.send("rip:update", match[1]);
+                if (match) this.websocket.send(JSON.stringify({ type: "update", progress: match[1] }));
             });
             process.on("close", () => { resolve(); });
-        }))
+        }));
+        this.websocket.send(JSON.stringify({ type: "rip-complete" }));
     }
 
     async convert_flac(path, filenames, mbid) {
@@ -75,11 +67,15 @@ class DiscHandler {
             const [ new_name, title ] = filenames[index - 1];
 
             // Convert to FLAC and add metadata
-            execSync(`ffmpeg -i "${join(path, file)}" -metadata title="${title}" -metadata musicbrainz_albumid="${mbid}" "${join(path, new_name)}"`);
+            Bun.spawnSync(["ffmpeg", "-i", join(path, file), "-metadata", `title=${title}`, "-metadata", `musicbrainz_albumid=${mbid}`, join(path, new_name)]);
             unlinkSync(join(path, file));  // Remove old WAV file
-            this.webcontents.send("rip:update", index + filenames.length);
+            this.websocket.send(JSON.stringify({ type: "update", progress: index + filenames.length }));
         }
-        this.webcontents.send("rip:update", "done");
+        this.websocket.send(JSON.stringify({ type: "flac-complete" }));
+        notifier.notify({
+            title: "Rip complete!",
+            message: "All tasks done."
+        });
     }
 }
 

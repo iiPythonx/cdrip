@@ -21,7 +21,7 @@ main {
 }
 
 /* Main layout */
-header, footer > section, #error {
+header, footer > section, #error, dialog > div {
     background-color: #242424;
     border-radius: 5px;
     padding: 15px;
@@ -122,4 +122,35 @@ th {
 }
 td {
     height: 23px;
+}
+
+/* Dialog */
+dialog {
+    width: 100%;
+    padding: 0px;
+    height: 100%;
+    position: absolute;
+    left: 0px;
+    background: none;
+    backdrop-filter: blur(.5rem);
+    border: 0px;
+    top: 0px;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+dialog > div {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+input {
+    padding: 5px;
+    border: none;
+    border-bottom: 1px solid gray;
+    outline: none;
+    flex: 1;
+    background: none;
 }

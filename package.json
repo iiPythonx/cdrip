@@ -1,13 +1,14 @@
 {
-  "name": "cdripper",
-  "main": "src/main.js",
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "dependencies": {
-    "electron": "^35.1.5"
-  },
-  "scripts": {
-    "start": "electron ."
-  }
+    "name": "cdrip",
+    "main": "src/main.js",
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "scripts": {
+        "start": "bun src/main.js",
+        "build": "bun build --compile --minify src/main.js --outfile cdrip"
+    },
+    "dependencies": {
+        "node-notifier": "^10.0.1"
+    }
 }

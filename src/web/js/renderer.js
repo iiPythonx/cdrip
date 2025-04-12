@@ -133,6 +133,7 @@ new (class {
         const track_count = this.disc.media[0].tracks.length;
         if (update === "done") {
             document.querySelector("button").innerText = "Eject disc";
+            document.querySelector("button").disabled = false;
             return;
         }
         document.querySelector("#progress").style.width = `${(update / (track_count * 2)) * 100}%`;
@@ -160,6 +161,8 @@ new (class {
         // Calculate album path
         const folder_path = `${path}/${this.disc.artist} - ${this.disc.title}/`;
 
+        document.querySelector("button").innerText = "Ripping...";
+        document.querySelector("button").disabled = true;
         await this.send("rip_disc", folder_path);  // do NOT remove end slash
         await this.send(
             "convert_flac",

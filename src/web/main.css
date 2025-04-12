@@ -88,6 +88,10 @@ button {
     cursor: pointer;
     transition: background-color .25s ease;
 }
+button:disabled {
+    cursor: not-allowed;
+    background-color: #007070;
+}
 button:hover {
     background-color: #037777;
 }
@@ -153,4 +157,23 @@ input {
     outline: none;
     flex: 1;
     background: none;
+}
+
+/* Credit footer :3 */
+footer#credit {
+    gap: 5px;
+    left: 10px;
+    bottom: 10px;
+    position: absolute;
+}
+footer#credit, footer#credit * {
+    font-family: monospace;
+}
+footer#credit a {
+    text-decoration: underline dotted;
+    transition: color .25s ease;
+}
+footer#credit a:hover {
+    color: gray;
+    text-decoration: underline;
 }

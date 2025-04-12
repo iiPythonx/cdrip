@@ -4,8 +4,8 @@ A tool to rip CDs, based on cdparanoia.
 
 ### Screenshots
 
-![Screenshot 1](https://github.com/iiarchives/cdrip/blob/main/.github/screenshot_1.png?raw=true)
-![Screenshot 2](https://github.com/iiarchives/cdrip/blob/main/.github/screenshot_2.png?raw=true)
+![Screenshot 1](https://github.com/iiPythonx/cdrip/blob/main/.github/screenshot_1.png?raw=true)
+![Screenshot 2](https://github.com/iiPythonx/cdrip/blob/main/.github/screenshot_2.png?raw=true)
 
 ### Development
 

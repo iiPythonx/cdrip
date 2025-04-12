@@ -7,7 +7,7 @@ import { main, display } from "./html.js";
 const musicbrainz = async (endpoint) => {
     return await (
         await fetch(`https://musicbrainz.org/ws/2/${endpoint}`, {
-            headers: { "User-Agent": "iiPython CD Ripper/0.3.1 (ben@iipython.dev)" }
+            headers: { "User-Agent": "iiPython CD Ripper/0.3.1 (https://github.com/iiPythonx/cdrip; ben@iipython.dev)" }
         })
     ).json();
 }

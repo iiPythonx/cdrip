@@ -56,11 +56,11 @@ section#error {
 h1 {
     font-size: 48px;
 }
-h2 {
-    font-weight: normal;
-}
 section#title {
     justify-content: center;
+}
+section#title > h2 {
+    font-weight: normal;
 }
 img {
     height: 120px;

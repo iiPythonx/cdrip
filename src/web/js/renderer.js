@@ -7,7 +7,7 @@ import { main, display } from "./html.js";
 const musicbrainz = async (endpoint) => {
     return await (
         await fetch(`https://musicbrainz.org/ws/2/${endpoint}`, {
-            headers: { "User-Agent": "iiPython CD Ripper/0.3.1 (https://github.com/iiPythonx/cdrip; ben@iipython.dev)" }
+            headers: { "User-Agent": "iiPython CD Ripper/0.3.2 (https://github.com/iiPythonx/cdrip; ben@iipython.dev)" }
         })
     ).json();
 }
@@ -178,9 +178,60 @@ new (class {
     }
 
     async fetch_metadata(toc) {
-        const response = await musicbrainz(`discid/-?toc=${toc}&fmt=json`);
+        const response = await musicbrainz(`discid/-?toc=${toc}&inc=artist-credits&fmt=json`);
         if (response.error || !response.releases || !response.releases.length) return null;
-        return await musicbrainz(`release/${response["releases"][0].id}?inc=artists+recordings&fmt=json`);
+
+        // Handle multiple releases
+        let id = response.releases[0].id;
+        if (response.releases.length > 1) {
+            main.innerHTML = `
+                <header>
+                    <section id = "title">
+                        <h2>Multiple Releases Matched</h2>
+                        <span>Please select your CD.</span>
+                    </section>
+                </header>
+                <footer>
+                    <section id = "tracks">
+                        <div class = "track-container">
+                            <table>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Title</th>
+                                    <th>Artist</th>
+                                    <th>Release Date</th>
+                                    <th>Country</th>
+                                    <th>Barcode</th>
+                                </tr>
+                            </table>
+                        </div>
+                    </section>
+                </footer>
+            `;
+
+            // Populate track list
+            id = await new Promise((resolve) => {
+                response.releases.sort((a, b) => new Date(b.date) - new Date(a.date));
+                for (const [index, release] of response.releases.entries()) {
+                    const row = document.createElement("tr");
+                    row.classList.add("release-select");
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td class = "release-name">${release.title} ${release.disambiguation ? `<span class = "disambiguation">(${release.disambiguation})</span>` : ""}</td>
+                        <td>${release["artist-credit"][0]["name"]}</td>
+                        <td>${release.date ?? ""}</td>
+                        <td>${release.country ?? ""}</td>
+                        <td>${release.barcode ?? ""}</td>
+                        <td></td>
+                    `;
+                    row.addEventListener("click", () => {
+                        resolve(release.id);
+                    });
+                    document.querySelector("tbody").appendChild(row);
+                }
+            });
+        }
+        return await musicbrainz(`release/${id}?inc=artists+recordings&fmt=json`);
     }
 
     async check_drive() {

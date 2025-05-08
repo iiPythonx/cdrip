@@ -183,3 +183,21 @@ footer#credit, footer#credit * {
 footer#credit a {
     text-decoration: underline dotted;
 }
+
+/* Release selection */
+.disambiguation {
+    color: gray;
+}
+.release-select * {
+    cursor: pointer;
+    transition: color .2s ease;
+}
+.release-select:hover * {
+    color: #adadad;
+}
+.release-name {
+    text-overflow: ellipsis;
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+}
